@@ -1,0 +1,95 @@
+{
+	"info": {
+		"_postman_id": "5c27df2b-d56e-4c7d-b09f-0ebc851d27a1",
+		"name": "Create Offers",
+		"description": "This run takes in a CSV or JSON file of all the target offers to be created.\n\nExample offer:\n\n``` json\n{\n    \"title\": \"AT Instructor: HTML Code Offer - Yosemite National Park Hiking\",\n    \"content\": \"<h2 class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=\\\\\\\"cmp-teaser__title\\\\\\\">\\\\n    Yosemite National Park Hiking\\\\n</h2>\\\\n<div class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=\\\\\\\"cmp-teaser__description\\\\\\\">Take an unforgettable hiking adventure with WKND tour guides in Yosemite National Park!</div>\\\\n<div class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=\\\\\\\"cmp-teaser__action-container\\\\\\\">\\\\n    <a class=&#x27;preserveHtml&#x27; class=&#x27;preserveHtml&#x27; class=\\\\\\\"cmp-teaser__action-link\\\\\\\" id=\\\\\\\"teaser-d9ec8d822c-cta-dca7e433ef\\\\\\\" data-cmp-clickable=\\\\\\\"\\\\\\\"\\\\n        href=\\\\\\\"/content/wknd/language-masters/en/adventures/yosemite-backpacking.html\\\\\\\">View\\\\n        Trip</a>\\\\n</div>\"\n}\n\n ```\n\nAn easy to use script to properly escape the `content` value is located: [https://git.corp.adobe.com/ADLS/mswuser-env/blob/dev/adobe-target/escapeOffers.js](https://git.corp.adobe.com/ADLS/mswuser-env/blob/dev/adobe-target/escapeOffers.js)",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17913394",
+		"_collection_link": "https://www.postman.com/lunar-escape-779934/workspace/target-api/collection/17913394-5c27df2b-d56e-4c7d-b09f-0ebc851d27a1?action=share&source=collection_link&creator=17913394"
+	},
+	"item": [
+		{
+			"name": "Create offers",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var resp = JSON.parse(responseBody);",
+							"",
+							"pm.test(\"Offers Uploaded\", function () {",
+							"  pm.response.to.have.status(201);",
+							"  pm.expect(resp).to.be.not.empty;",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "bearer {{ACCESS_TOKEN}}",
+						"type": "text"
+					},
+					{
+						"key": "x-api-key",
+						"value": "{{CLIENT_ID}}",
+						"type": "text"
+					},
+					{
+						"key": "X-Gw-Ims-Org-Id",
+						"value": "{{ORG_ID}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/vnd.adobe.target.v2+json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": " {\n \"name\": \"{{title}}\", \n \"content\": \"{{content}}\"\n }\n"
+				},
+				"url": {
+					"raw": "https://mc.adobe.io/{{tenant}}/target/offers/content",
+					"protocol": "https",
+					"host": [
+						"mc",
+						"adobe",
+						"io"
+					],
+					"path": [
+						"{{tenant}}",
+						"target",
+						"offers",
+						"content"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "content",
+			"value": ""
+		},
+		{
+			"key": "title",
+			"value": ""
+		}
+	]
+}
