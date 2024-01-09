@@ -1,20 +1,6 @@
 const targetRequests = require('./targetRequests.js');
 const dataPreperation = require("./dataPreperation.js")
-const path = require('path');
-const OFFER_PATH = "params/offers"
 const MODIFIEDAT = "2024-01-09"
-
-// const AIO_FILE = "./params/aio-projects/vlab7-us.json"
-// let AIO_JSON = require(AIO_FILE);
-
-// let OAUTH = AIO_JSON.project.workspace.details.credentials[0].oauth_server_to_server
-// const AUTH_JSON = {
-//     client_id: OAUTH.client_id,
-//     client_secret: OAUTH.client_secrets.join(","),
-//     scope: OAUTH.scopes.join(","),
-//     org_id: AIO_JSON.project.org.ims_org_id,
-//     tenant: path.parse(AIO_FILE).name
-// }
 
 const cmd = {
     create: "create",
@@ -40,10 +26,11 @@ const runRequests = async (type, data) => {
                         }
             }));
             console.log("Final Results:");
-            console.log(results);
+            console.log(JSON.stringify(results, null, 2));
 };
 
 let action = cmd.delete;
+// let action = cmd.create;
 switch (action) {
     case cmd.create:
         console.log("Offers data not created, creating...")

@@ -3,7 +3,6 @@ const debugJSON = debug("json");
 const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
-const { rejects } = require("assert");
 const DEFAULT_AIO_DIR = "params/aio-projects";
 const DEFAULT_OFFERS_DIR = "params/offers";
 const OUTPUT_AXIOS = "bin/axios/";

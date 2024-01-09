@@ -50,71 +50,31 @@ async function createOffers(AUTH_JSON, token, offers) {
             try {
                 const response = await axios(request);
                 const resp = response.data;
-
                 if (resp.error_code) {
                     console.log(resp.message);
                     // console.log('[X]: ' + offer.title);
-                    return { error: '[X]: ' + offer.title, message: resp.message };
+                    return { error: offer.title, message: resp.message };
                 } else {
                     // console.log('[\u2713]: ' + offer.title);
-                    return '[\u2713]: ' + offer.title;
+                    return { uploaded:  offer.title };
                 }
             } catch (error) {
-                console.error('Error creating offer: ' + offer.title, error.message);
                 debugParams(request);
-                throw error; // Rethrow the error to be caught by the calling code
+                throw new Error('Error creating offer: ' + offer.title, error.message);
+
             }
         }));
-        // console.log('Uploaded ' + results.length + ' offers to ' + AUTH_JSON.tenant);
-        // console.log(results);
-        return { [AUTH_JSON.tenant]: results};
+        return { [AUTH_JSON.tenant]: results };
     } catch (error) {
-        console.error('Error:', error);
+        throw new Error('Error:', error);
     }
 }
 
 
-function deleteOffers(AUTH_JSON, token, offersModifiedAt) {
-    return new Promise((resolve, reject) => {
-        const request = {
-            method: "get",
-            url: "https://mc.adobe.io/" + AUTH_JSON.tenant + "/target/offers",
-            data: {},
-            headers: {
-                Authorization: `bearer ${token}`,
-                'x-api-key': AUTH_JSON.client_id,
-                'X-Gw-Ims-Org-Id': AUTH_JSON.org_id,
-                'Content-Type': 'application/vnd.adobe.target.v2+json',
-            }
-        }
-        axios(request).then((response) => {
-            const res = response.data;
-            let delOffers = [];
-            for (const obj of res.offers) {
-                if (obj.modifiedAt.includes(offersModifiedAt)) {
-                    debugParams("Deleting: " + obj.name);
-                    delOffers.push(obj);
-                }
-            }
-            console.log("Deleting " + delOffers.length + " Offers:");
-            recursiveDelete(AUTH_JSON, token, delOffers);
-            resolve();
-        })
-            .catch((error) => {
-                console.error('Error fetching offers:', error.message);
-                debugParams(request);
-                reject(error);
-            });
-    });
-}
-
-function recursiveDelete(AUTH_JSON, token, offers) {
-    if (offers.length < 1) return;
-    const offer = offers[offers.length - 1]; // Grab last offer in the array
-    offers.pop(); // Remove last offer in array for recursion
+async function deleteOffers(AUTH_JSON, token, offersModifiedAt) {
     const request = {
-        method: "delete",
-        url: "https://mc.adobe.io/" + AUTH_JSON.tenant + "/target/offers/content/" + offer.id,
+        method: "get",
+        url: "https://mc.adobe.io/" + AUTH_JSON.tenant + "/target/offers",
         data: {},
         headers: {
             Authorization: `bearer ${token}`,
@@ -123,18 +83,47 @@ function recursiveDelete(AUTH_JSON, token, offers) {
             'Content-Type': 'application/vnd.adobe.target.v2+json',
         }
     }
-    axios(request).then(response => {
-        const resp = response.data;
-        if (resp.error_code) {
-            console.log(resp.message);
-        } else {
-            console.log("[\u2713]: " + offer.name)
+    try {
+        const response = await axios(request);
+        const offers = response.data.offers;
+        try {
+            const results = await Promise.all(offers.map(async (offer) => {
+                if (offer.modifiedAt.includes(offersModifiedAt)) {
+                    debugParams("Deleting: " + offer.name);
+                    const delRequest = {
+                        method: "delete",
+                        url: "https://mc.adobe.io/" + AUTH_JSON.tenant + "/target/offers/content/" + offer.id,
+                        data: {},
+                        headers: {
+                            Authorization: `bearer ${token}`,
+                            'x-api-key': AUTH_JSON.client_id,
+                            'X-Gw-Ims-Org-Id': AUTH_JSON.org_id,
+                            'Content-Type': 'application/vnd.adobe.target.v2+json',
+                        }
+                    }
+                    // return { "deleted": offer.name }; 
+                    try {
+                        const delResponse = await axios(delRequest)
+                        const resp = delResponse.data;
+                        if (resp.error_code) {
+                            return { error: '[X]: ' + offer.title, message: resp.message };
+                        } else {
+                            return { "deleted": offer.name }; 
+                        }
+                    } catch (error) {
+                        debugParams(request);
+                        throw new Error("Error deleting offer: " + offer.name, error.message);
+                    }
+                } 
+            }));
+            return { [AUTH_JSON.tenant]: results.filter(value => value != null) };
+        } catch (error) {
+            throw new Error('Error:', error);
         }
-        recursiveDelete(AUTH_JSON, token, offers);
-    }).catch(error => {
-        console.error("Error deleting offer: " + offer.name, error.message);
+    } catch (error) {
         debugParams(request);
-    });
+        throw new Error('Error fetching offers:', error.message);
+    }
 }
 
 exports.getAccessToken = getAccessToken;
