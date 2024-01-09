@@ -2,7 +2,7 @@ const axios = require('axios');
 const debug = require("debug");
 const debugParams = debug("params");
 
-function getAccessToken(AUTH_JSON, callback) {
+function getAccessToken(AUTH_JSON) {
     let accesstoken = "";
     const request = {
         method: "post",
@@ -17,62 +17,62 @@ function getAccessToken(AUTH_JSON, callback) {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     };
-
-    return new Promise(function (resolve, reject) {
-        console.log("Tenant: " + AUTH_JSON.tenant)
-        axios(request).then(response => {
-            const data = response.data;
-            accesstoken = data.access_token;
-            resolve(accesstoken);
-        }).catch(error => {
-            reject("Error in IMS OAuth Request: " + error.message);
-            debugParams(request);
-        });
+    debugParams("Tenant: " + AUTH_JSON.tenant)
+    return axios(request).then(response => {
+        const data = response.data;
+        accesstoken = data.access_token;
+        return accesstoken;
+    }).catch(error => {
+        debugParams(request);
+        throw new Error("Error in IMS OAuth Request: " + error.message);
     });
 }
 
-function createOffers(AUTH_JSON, token, offers, count) {
-    return new Promise((resolve, reject) => {
-        if (!count) count = 0;
-        if (offers.length < 1) {
-            console.log("Uploaded " + count + " offers to " + AUTH_JSON.tenant);
-            resolve();
-        }
-        const offer = offers[offers.length - 1]; // Grab last offer in the array
-        offers.pop(); // Remove last offer in array for recursion
-
-        const request = {
-            method: "post",
-            url: "https://mc.adobe.io/" + AUTH_JSON.tenant + "/target/offers/content",
-            data: {
+async function createOffers(AUTH_JSON, token, offers) {
+    const request = {
+        method: 'post',
+        url: `https://mc.adobe.io/${AUTH_JSON.tenant}/target/offers/content`,
+        data: {},
+        headers: {
+            Authorization: `bearer ${token}`,
+            'x-api-key': AUTH_JSON.client_id,
+            'X-Gw-Ims-Org-Id': AUTH_JSON.org_id,
+            'Content-Type': 'application/vnd.adobe.target.v2+json',
+        },
+    };
+    try {
+        const results = await Promise.all(offers.map(async (offer) => {
+            request.data = {
                 name: offer.title,
-                content: offer.content
-            },
-            headers: {
-                Authorization: `bearer ${token}`,
-                'x-api-key': AUTH_JSON.client_id,
-                'X-Gw-Ims-Org-Id': AUTH_JSON.org_id,
-                'Content-Type': 'application/vnd.adobe.target.v2+json'
-            }
-        };
+                content: offer.content,
+            };
 
-        axios(request).then(response => {
-            const resp = response.data;
+            try {
+                const response = await axios(request);
+                const resp = response.data;
 
-            if (resp.error_code) {
-                console.log(resp.message);
-            } else {
-                // debugParams("Uploaded: " + offer.title);
-                console.log("Uploaded: " + offer.title);
+                if (resp.error_code) {
+                    console.log(resp.message);
+                    // console.log('[X]: ' + offer.title);
+                    return { error: '[X]: ' + offer.title, message: resp.message };
+                } else {
+                    // console.log('[\u2713]: ' + offer.title);
+                    return '[\u2713]: ' + offer.title;
+                }
+            } catch (error) {
+                console.error('Error creating offer: ' + offer.title, error.message);
+                debugParams(request);
+                throw error; // Rethrow the error to be caught by the calling code
             }
-            resolve(createOffers(AUTH_JSON, token, offers, count++)); // recursively create offers
-        }).catch(error => {
-            console.error("Error creating offer: " + offer.title, error.message);
-            debugParams(request);
-            reject(error);
-        });
-    });
+        }));
+        // console.log('Uploaded ' + results.length + ' offers to ' + AUTH_JSON.tenant);
+        // console.log(results);
+        return { [AUTH_JSON.tenant]: results};
+    } catch (error) {
+        console.error('Error:', error);
+    }
 }
+
 
 function deleteOffers(AUTH_JSON, token, offersModifiedAt) {
     return new Promise((resolve, reject) => {
@@ -96,8 +96,8 @@ function deleteOffers(AUTH_JSON, token, offersModifiedAt) {
                     delOffers.push(obj);
                 }
             }
-            console.log("Deleting " + delOffers.length + " Offers");
-           // recursiveDelete(AUTH_JSON, token, delOffers);
+            console.log("Deleting " + delOffers.length + " Offers:");
+            recursiveDelete(AUTH_JSON, token, delOffers);
             resolve();
         })
             .catch((error) => {
@@ -128,7 +128,7 @@ function recursiveDelete(AUTH_JSON, token, offers) {
         if (resp.error_code) {
             console.log(resp.message);
         } else {
-            console.log("Deleted: " + offer.name)
+            console.log("[\u2713]: " + offer.name)
         }
         recursiveDelete(AUTH_JSON, token, offers);
     }).catch(error => {

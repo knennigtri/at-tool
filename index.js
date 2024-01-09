@@ -2,7 +2,7 @@ const targetRequests = require('./targetRequests.js');
 const dataPreperation = require("./dataPreperation.js")
 const path = require('path');
 const OFFER_PATH = "params/offers"
-const MODIFIEDAT = "2024-01-05"
+const MODIFIEDAT = "2024-01-09"
 
 // const AIO_FILE = "./params/aio-projects/vlab7-us.json"
 // let AIO_JSON = require(AIO_FILE);
@@ -22,51 +22,25 @@ const cmd = {
 };
 
 const runRequests = async (type, data) => {
-    try{
-    const environments = await dataPreperation.createAIOParams(null);
-    // dataPreperation.createAIOParams(null)
-    //     .then(environments => {
-    //         // next = false;
-    console.log(environments.length);
-            for (const requestParams of environments) {
-                console.log("--Running Requests for " + requestParams.tenant + "--")
-                // break;
-                const resultToken = await targetRequests.getAccessToken(requestParams)
-                    // .then((resultToken) => {
-                        
+
+    const environments = await dataPreperation.createAIOParams(null)
+            const results = await Promise.all(environments.map(async (requestParams) => {
+               const resultToken = await targetRequests.getAccessToken(requestParams)
                         console.log("Token captured for: " + requestParams.tenant);
-                        // if(type == cmd.create){
-                        //     console.log("Request: " + type)
-                        //     await targetRequests.createOffers(requestParams, resultToken, data)
-                        // } else if(type == cmd.delete){
-                        //     console.log("Request: " + type)
-                        //     console.log("Deleting offers with {modifiedAt: " + data + "} for: " + requestParams.tenant)
-                        //     // await targetRequests.deleteOffers(requestParams, resultToken, data);
-                        // } else {
-                        //     console.log("no command specified")
-                        // }
                         switch (type) {
                             case cmd.create:
                                 console.log("Request: " + type)
                                 const offers = data;
-                                await targetRequests.createOffers(requestParams, resultToken, offers)
-                                break;
+                                return targetRequests.createOffers(requestParams, resultToken, offers)
                             case cmd.delete:
                                 console.log("Request: " + type)
                                 const modifiedAt = data;
                                 console.log("Deleting offers with {modifiedAt: " + modifiedAt + "} for: " + requestParams.tenant)
-                                await targetRequests.deleteOffers(requestParams, resultToken, modifiedAt);
-                                break;
+                                return targetRequests.deleteOffers(requestParams, resultToken, modifiedAt);
                         }
-                    // }).catch((error) => {
-                    //     console.log(error);
-                    // });
-                // });
-            }
-        // })
-        } catch (err) {
-            console.error(err);
-        }
+            }));
+            console.log("Final Results:");
+            console.log(results);
 };
 
 let action = cmd.delete;
@@ -77,12 +51,12 @@ switch (action) {
             .then((offers) => {
                 console.log("Offers prepared for upload.");
                 runRequests('create', offers)
-                .then(() => {
-                    console.log('Requests completed successfully');
-                })
-                .catch((error) => {
-                    console.error('Error running requests:', error);
-                });
+                    .then(() => {
+                        console.log('Requests completed successfully');
+                    })
+                    .catch((error) => {
+                        console.error('Error running requests:', error);
+                    });
             })
             .catch((err) => {
                 console.error(err);
