@@ -1,5 +1,5 @@
 {
-  "name": "target-automation",
+  "name": "target",
   "version": "1.0.0",
   "description": "automation scripts for Adobe Target environments for ADLS",
   "scripts": {
@@ -7,6 +7,7 @@
     "lint:fix": "npm run lint -- --fix"
   },
   "dependencies": {
+    "axios": "^1.6.5",
     "debug": "^4.3.4",
     "mkdirp": "^3.0.1",
     "newman": "^6.0.0"

@@ -4,17 +4,16 @@ const newman = require("./newman.js");
 const debug = require("debug");
 const debugIndex = debug("index");
 
-const envFile = "../aio-projects/vlab7-us.json";
-const deleteOffersModifiedAt = "2023-11-17";
+const AIO_FOLDER = "params/aio-projects";
+const MODIFIED_AT = "2024-01-05";
 
-const environments = pmEnv.convertAioJsons(envFile);
+const environments = pmEnv.convertAioJsons(AIO_FOLDER);
 
 const runDeleteAsync = async (env, deleteTimestamp) => {
   return new Promise((resolve, reject) => {
     newman.deleteOffers(env, deleteTimestamp, (err, resultObj) => {
       if (err) {
         console.error(err);
-        console.log(message.HELP);
         reject(err);
       }
       if (resultObj) {
@@ -27,9 +26,9 @@ const runDeleteAsync = async (env, deleteTimestamp) => {
 
 (async () => {
     for (const environment of environments) {
-      console.log("Deleting offers with timestamp '" + deleteOffersModifiedAt + "' from: " + environment.name);
+      console.log("Deleting offers with timestamp '" + MODIFIED_AT + "' from: " + environment.name);
       try {
-        await runDeleteAsync(environment, deleteOffersModifiedAt);
+        await runDeleteAsync(environment, MODIFIED_AT);
       } catch (error) {
         console.error(error);
       }

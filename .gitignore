@@ -40,3 +40,5 @@ environments/
 aio-projects/**/*.json
 node_modules/
 offers.json
+
+params/*
