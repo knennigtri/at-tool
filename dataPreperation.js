@@ -3,115 +3,125 @@ const debugJSON = debug("json");
 const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
+const { rejects } = require("assert");
 const DEFAULT_AIO_DIR = "params/aio-projects";
 const DEFAULT_OFFERS_DIR = "params/offers";
 const OUTPUT_AXIOS = "bin/axios/";
 const OUTPUT_OFFER = "bin/target/offers.json";
 
-function getFiles(inputPath, reqExt, callback) {
-  try {
-    let jsonFiles = [];
-    if (fs.statSync(inputPath).isDirectory()) {
-      // Read the list of files in the folder synchronously
-      let files = fs.readdirSync(inputPath);
+function getFiles(inputPath, reqExt) {
+  return new Promise((resolve, reject) => {
+    try {
+      let jsonFiles = [];
+      if (fs.statSync(inputPath).isDirectory()) {
+        // Read the list of files in the folder synchronously
+        let files = fs.readdirSync(inputPath);
 
-      // Filter for JSON files
-      jsonFiles = files
-        .filter(file => path.extname(file).toLowerCase() === reqExt)
-        .map(file => path.join(inputPath, file));
-    } else if (fs.statSync(inputPath).isFile()) {
-      if (path.extname(inputPath) == reqExt) jsonFiles.push(inputPath);
-      debugJSON("Using single file: " + inputPath);
+        // Filter for JSON files
+        jsonFiles = files
+          .filter(file => path.extname(file).toLowerCase() === reqExt)
+          .map(file => path.join(inputPath, file));
+      } else if (fs.statSync(inputPath).isFile()) {
+        if (path.extname(inputPath) == reqExt) jsonFiles.push(inputPath);
+        debugJSON("Using single file: " + inputPath);
+      }
+      debugJSON("Merging:")
+      debugJSON(jsonFiles)
+      resolve(jsonFiles);
+
+    } catch (readDirErr) {
+      console.error('Error reading the directory:', readDirErr);
+      reject(readDirErr);
     }
-    debugJSON("Merging:")
-    debugJSON(jsonFiles)
-    callback(null, jsonFiles);
-
-  } catch (readDirErr) {
-    console.error('Error reading the directory:', readDirErr);
-    callback(readDirErr, null);
-  }
+  });
 }
 
-function createTargetOffersObj(inputPath, callback) {
+function createTargetOffersObj(inputPath) {
   if (!inputPath) {
     debugJSON("Using default folder: " + path.resolve(DEFAULT_OFFERS_DIR));
     inputPath = DEFAULT_OFFERS_DIR;
   }
-  getFiles(inputPath, ".html", (err, files) => {
-    if (err) {
-      console.error('Error:', err);
-      callback(err, null)
-    }
-    const contentArr = [];
-    // Loop through the HTML files and read their content synchronously
-    debugJSON(files)
-    files.forEach(file => {
-      try {
-        console.log("Read HTML file: " + file);
-        const data = fs.readFileSync(file, "utf-8");
+  return new Promise((resolve, reject) => {
+    getFiles(inputPath, ".html")
+      .then((files) => {
+        const contentArr = [];
+        // Loop through the HTML files and read their content synchronously
+        debugJSON(files)
+        files.forEach(file => {
+          try {
+            console.log("Read HTML file: " + file);
+            const data = fs.readFileSync(file, "utf-8");
 
-        contentArr.push({
-          "title": path.basename(file, path.extname(file)),
-          "content": data.replace(/\n/g, "\\n")
-            .replace(/\"/g, '\\"')
-            .replace(/\\r/g, "\\r")
+            contentArr.push({
+              "title": path.basename(file, path.extname(file)),
+              "content": data.replace(/\n/g, "\\n")
+                .replace(/\"/g, '\\"')
+                .replace(/\\r/g, "\\r")
+            });
+          } catch (readFileErr) {
+            console.error(`Error reading file ${file}:`, readFileErr);
+            reject(readFileErr);
+          }
         });
-      } catch (readFileErr) {
-        console.error(`Error reading file ${file}:`, readFileErr);
-      }
-    });
-    if (debugJSON.enabled) {
-      writeObjectToFile(contentArr, OUTPUT_OFFER);
-    }
-    callback(null, contentArr);
+        if (debugJSON.enabled) {
+          writeObjectToFile(contentArr, OUTPUT_OFFER);
+        }
+        resolve(contentArr);
+      })
+      .catch((error) => {
+        console.error('Error:', err);
+        reject(error);
+      });
   });
 }
 
-function createAIOParams(inputPath, callback) {
+function createAIOParams(inputPath) {
   if (!inputPath) {
     debugJSON("Using default folder: " + path.resolve(DEFAULT_AIO_DIR));
     inputPath = DEFAULT_AIO_DIR;
   }
-  getFiles(inputPath, ".json", (err, files) => {
-    if (err) {
-      console.error('getFiles Error:', err);
-      callback(err, null);
-    }
+  return new Promise((resolve, reject) => {
+    getFiles(inputPath, ".json")
+      .then((files) => {
+        const contentArr = [];
+        console.log("Finding required parameters in:");
+        console.log(files);
+        // Loop through the files and read their content synchronously
+        files.forEach(file => {
+          debugJSON(file);
 
-    const contentArr = [];
-    debugJSON(files)
-    // Loop through the files and read their content synchronously
-    files.forEach(file => {
-      console.log(file)
+          let data = {};
+          try {
+            data = fs.readFileSync(file, "utf8");
+            data = JSON.parse(data);
+          } catch (err) {
+            console.log("requestJSON Error: " + err);
+            reject(err);
+          }
 
-      let data = {};
-      try {
-        data = fs.readFileSync(file, "utf8");
-        data = JSON.parse(data);
-      } catch (err) {
-        console.log("requestJSON Error: " + err);
-        callback(err, null)
-      }
+          debugJSON("Finding required request parameters from " + path.basename(file));
+          let requestParams = {
+            client_id: findNestedObj(data, "CLIENT_ID"),
+            client_secret: findNestedObj(data, "CLIENT_SECRETS"),
+            org_id: findNestedObj(data, "ORG_ID") || findNestedObj(data, "IMS_ORG_ID"),
+            scope: findNestedObj(data, "SCOPES"),
+            tenant: path.basename(file, path.extname(file))
+          };
 
-      console.log("Finding required request parameters from " + path.basename(file));
-      let requestParams = {
-        client_id: findNestedObj(data, "CLIENT_ID"),
-        client_secret: findNestedObj(data, "CLIENT_SECRETS"),
-        org_id: findNestedObj(data, "ORG_ID") || findNestedObj(data, "IMS_ORG_ID"),
-        scope: findNestedObj(data, "SCOPES"),
-        tenant: path.basename(file, path.extname(file))
-      };
+          debugJSON("Parameters applied:")
+          debugJSON(requestParams);
 
-      debugJSON("Required Request Params:")
-      debugJSON(requestParams);
-
-      contentArr.push(requestParams);
-    });
-    if (debugJSON.enabled) {
-      writeObjectToFile(contentArr, path.join(OUTPUT_AXIOS, "aio-projects.json"));
-    }
-    callback(null, contentArr);
+          contentArr.push(requestParams);
+        });
+        if (debugJSON.enabled) {
+          writeObjectToFile(contentArr, path.join(OUTPUT_AXIOS, "aio-projects.json"));
+        }
+        console.log("Found all parameters successfully.");
+        resolve(contentArr);
+      }).catch(err => {
+        console.error('getFiles Error:', err);
+        reject(err);
+      });
   });
 }
 
