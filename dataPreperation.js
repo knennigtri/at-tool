@@ -1,8 +1,8 @@
 const debug = require("debug");
 const debugJSON = debug("json");
-const fs = require('fs');
-const path = require('path');
-const mkdirp = require('mkdirp');
+const fs = require("fs");
+const path = require("path");
+const mkdirp = require("mkdirp");
 const DEFAULT_AIO_DIR = "params/aio-projects";
 const DEFAULT_OFFERS_DIR = "params/offers";
 const OUTPUT_AXIOS = "bin/axios/";
@@ -24,12 +24,12 @@ function getFiles(inputPath, reqExt) {
         if (path.extname(inputPath) == reqExt) jsonFiles.push(inputPath);
         debugJSON("Using single file: " + inputPath);
       }
-      debugJSON("Merging:")
-      debugJSON(jsonFiles)
+      debugJSON("Merging:");
+      debugJSON(jsonFiles);
       resolve(jsonFiles);
 
     } catch (readDirErr) {
-      console.error('Error reading the directory:', readDirErr);
+      console.error("Error reading the directory:", readDirErr);
       reject(readDirErr);
     }
   });
@@ -45,7 +45,7 @@ function createTargetOffersObj(inputPath) {
       .then((files) => {
         const contentArr = [];
         // Loop through the HTML files and read their content synchronously
-        debugJSON(files)
+        debugJSON(files);
         files.forEach(file => {
           try {
             console.log("Read HTML file: " + file);
@@ -54,7 +54,7 @@ function createTargetOffersObj(inputPath) {
             contentArr.push({
               "title": path.basename(file, path.extname(file)),
               "content": data.replace(/\n/g, "\\n")
-                .replace(/\"/g, '\\"')
+                .replace(/\"/g, "\\\"")
                 .replace(/\\r/g, "\\r")
             });
           } catch (readFileErr) {
@@ -68,7 +68,7 @@ function createTargetOffersObj(inputPath) {
         resolve(contentArr);
       })
       .catch((error) => {
-        console.error('Error:', err);
+        console.error("Error: ", error);
         reject(error);
       });
   });
@@ -107,7 +107,7 @@ function createAIOParams(inputPath) {
             tenant: path.basename(file, path.extname(file))
           };
 
-          debugJSON("Parameters applied:")
+          debugJSON("Parameters applied:");
           debugJSON(requestParams);
 
           contentArr.push(requestParams);
@@ -118,7 +118,7 @@ function createAIOParams(inputPath) {
         console.log("Found all parameters successfully.");
         resolve(contentArr);
       }).catch(err => {
-        console.error('getFiles Error:', err);
+        console.error("getFiles Error:", err);
         reject(err);
       });
   });
@@ -144,10 +144,10 @@ function writeObjectToFile(jsonObject, outputFile) {
 
     try {
       // Write the JSON string to the file synchronously
-      fs.writeFileSync(outputFile, jsonString, 'utf8');
-      debugJSON('Output has been written to', outputFile);
+      fs.writeFileSync(outputFile, jsonString, "utf8");
+      debugJSON("Output has been written to", outputFile);
     } catch (err) {
-      console.error('Error writing to the file:', err);
+      console.error("Error writing to the file:", err);
     }
   }
 }
