@@ -2,7 +2,7 @@ const targetRequests = require("./targetRequests.js");
 const dataPreperation = require("./dataPreperation.js");
 const MODIFIEDAT = "2024-01-09";
 
-const cmd = {
+const mode = {
   create: "create",
   delete: "delete"
 };
@@ -13,10 +13,10 @@ const runRequests = async (type, data) => {
     const resultToken = await targetRequests.getAccessToken(requestParams);
     console.log("Token captured for: " + requestParams.tenant);
     switch (type) {
-    case cmd.create:
+    case mode.create:
       console.log("Request: " + type);
       return targetRequests.createOffers(requestParams, resultToken, data);
-    case cmd.delete:
+    case mode.delete:
       console.log("Request: " + type);
       console.log("Deleting offers with {modifiedAt: " + data + "} for: " + requestParams.tenant);
       return targetRequests.deleteOffers(requestParams, resultToken, data);
@@ -26,15 +26,15 @@ const runRequests = async (type, data) => {
   console.log(JSON.stringify(results, null, 2));
 };
 
-let action = cmd.delete;
+let action = mode.delete;
 // let action = cmd.create;
 switch (action) {
-case cmd.create:
+case mode.create:
   console.log("Offers data not created, creating...");
   dataPreperation.createTargetOffersObj(null)
     .then((offers) => {
       console.log("Offers prepared for upload.");
-      runRequests("create", offers)
+      runRequests(mode.create, offers)
         .then(() => {
           console.log("Requests completed successfully");
         })
@@ -46,7 +46,7 @@ case cmd.create:
       console.error(err);
     });
   break;
-case cmd.delete:
-  runRequests("delete", MODIFIEDAT);
+case mode.delete:
+  runRequests(mode.delete, MODIFIEDAT);
   break;
 }

@@ -5,8 +5,8 @@ const path = require("path");
 const mkdirp = require("mkdirp");
 const DEFAULT_AIO_DIR = "params/aio-projects";
 const DEFAULT_OFFERS_DIR = "params/offers";
-const OUTPUT_AXIOS = "bin/axios/";
-const OUTPUT_OFFER = "bin/target/offers.json";
+const OUTPUT_AXIOS = "target/axios/";
+const OUTPUT_OFFER = "target/target/offers.json";
 
 function getFiles(inputPath, reqExt) {
   return new Promise((resolve, reject) => {

@@ -18,7 +18,6 @@
 
 target/
 **/target/
-bin/
 *.settings
 pom.xml.tag
 pom.xml.releaseBackup

@@ -1,7 +1,11 @@
 {
-  "name": "target",
+  "name": "at-tool",
   "version": "1.0.0",
   "description": "automation scripts for Adobe Target environments for ADLS",
+  "main": "index.js",
+  "bin": {
+    "at-tool": "cli.js"
+  },
   "scripts": {
     "lint": "eslint '**/*.js?(x)'",
     "lint:fix": "npm run lint -- --fix"
