@@ -1,35 +1,83 @@
-# Adobe Target automations for the MSWuser project
-This is an NPM module that takes different Target requirements and automates them. Currently this includes:
- 
- * Takes an AIO project download JSON and converting it into a Postman environment file
- * Takes HTML offers and merging them into a JSON to send to Adobe Target
- * Newman commands that takes a folder of PM environments and uploads the Offers JSON to the associated org.
+# Adobe Target automations
+Actions currently supported:
+ * Create Target offers based on HTML files
+ * Delete Target offers based on modifiedAt string
 
-## Prerequisites
-Must have a folder of AIO Project JSONs for desired organizations. The AIO project must have:
- * Adobe Target API enabled
- * OAuth credentials
- * To create these see [aio-projects](../aio-projects/)
+## Command Line Tool
 
-## Initialization
-1. Install NPM
-2. Run:
+Run commands on a **single** Adobe organization
 ```bash
-    cd <this directory>
-    npm install
+ at-tool -a aio-auth.json [ARGS]
 ```
 
-## Create Offers JSON
-
-1. Default locations:
-   1. HTML offers should be added to `OFFER_FOLDER = "offers"`
-   2. AIO Project JSON should be added to `AIO_FOLDER = ../aio-projects`
-   3. These can be changed in the create.js file
-2. Run
+Run commands on **many** Adobe organizations
 ```bash
-    node create.js
+ at-tool -a path/to/auth/jsons [ARGS]
 ```
-1. Optionall run in debug mode:
+
+Create HTML offers based ona folder of HTML files:
 ```bash
-    DEBUG=* node create.js
+ at-tool -a aio-auth.json --create folder/of/html/files
+```
+
+Create a single HTML offer:
+```bash
+ at-tool -a aio-auth.json --create path/to/myOffer.html
+```
+
+Delete all offers created in January 2024:
+```bash
+ at-tool -a aio-auth.json --delete "2024-01"
+```
+
+## Create config file for Authentication
+1. Create and [Adobe IO project](https://developer.adobe.com/dep/guides/dev-console/create-project/)
+   1. Add the **Adobe Target API**
+      1. Select **oAuth** Credentials
+   2. Go to the Credentials screen and download the JSON.
+
+For OAuth credentials, verify the JSON contains at least:
+    
+```json
+{
+  "ORG_ID": "xxxxxxxxxxxxxxxxxxxxx@AdobeOrg",
+  "CLIENT_SECRETS": [ "xxxxxxxxxxxxxxxxxxxxx" ],
+  "CLIENT_ID": "xxxxxxxxxxxxxxxxxxxxx",
+  "SCOPES": [
+    "xxxxxxxxx",
+    "xxxxxxxxx",
+    "xxxxxxxxx"
+  ]
+}
+```
+> If running this tool with many Adobe Organizations, you will need to create a AIO Project and download the oAuth json per Organization. Add all the jsons to a single folder to run the tool against all Adobe organizations using `at-tool -a path/to/aio/jsons/`
+
+## Usage 
+```bash
+at-tool -h
+
+Usage: at-tool [ARGS]
+ Arguments:
+    -a, --auth <auth.json>                 AIO project json or oAuth json
+    -D, --delete <String>       [Mode] Deletes all offers modifiedAt containing <String>              
+    -C, --create <path>         [Mode] Creates offer(s) at the given path
+    -v, --version               Displays version of this package
+    -h, --help
+               auth
+               create 
+               delete
+               debug
+```
+
+## Create HTML Offers
+//TODO
+
+## Delete HTML Offers
+Quickly delete offers based on the modifiedAt key. The Adobe Target API stores the last modified string as:
+`"modifiedAt": "2023-12-20T18:11:22Z"`
+
+The at-tool checks modifiedAt.contains("searchString"). If true, the tool deletes the offer.
+
+```bash
+ at-tool -a aio-auth.json --delete "2024-01"
 ```

@@ -4,7 +4,7 @@
   "description": "automation scripts for Adobe Target environments for ADLS",
   "main": "index.js",
   "bin": {
-    "at-tool": "cli.js"
+    "at-tool": "bin/global.js"
   },
   "scripts": {
     "lint": "eslint '**/*.js?(x)'",
