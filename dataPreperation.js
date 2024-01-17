@@ -1,127 +1,140 @@
 const debug = require("debug");
 const debugJSON = debug("json");
 const fs = require("fs");
+const { readdir, stat } = fs.promises;
 const path = require("path");
 const mkdirp = require("mkdirp");
-const DEFAULT_AIO_DIR = "params/aio-projects";
-const DEFAULT_OFFERS_DIR = "params/offers";
 const OUTPUT_AXIOS = "target/axios/";
 const OUTPUT_OFFER = "target/target/offers.json";
+exports.debugOptions = {
+  "json": "Validate json objects with written files under ./target/*"
+};
 
-function getFiles(inputPath, reqExt) {
-  return new Promise((resolve, reject) => {
-    try {
-      let jsonFiles = [];
-      if (fs.statSync(inputPath).isDirectory()) {
-        // Read the list of files in the folder synchronously
-        let files = fs.readdirSync(inputPath);
+async function getFiles(inputPath, reqExt) {
+  try {
+    let jsonFiles = [];
 
-        // Filter for JSON files
-        jsonFiles = files
-          .filter(file => path.extname(file).toLowerCase() === reqExt)
-          .map(file => path.join(inputPath, file));
-      } else if (fs.statSync(inputPath).isFile()) {
-        if (path.extname(inputPath) == reqExt) jsonFiles.push(inputPath);
-        debugJSON("Using single file: " + inputPath);
-      }
-      debugJSON("Merging:");
-      debugJSON(jsonFiles);
-      resolve(jsonFiles);
+    const fileStat = await stat(inputPath);
 
-    } catch (readDirErr) {
-      console.error("Error reading the directory:", readDirErr);
-      reject(readDirErr);
+    if (fileStat.isDirectory()) {
+      // Read the list of files in the folder asynchronously
+      const files = await readdir(inputPath);
+
+      // Filter for JSON files
+      jsonFiles = files
+        .filter(file => path.extname(file).toLowerCase() === reqExt)
+        .map(file => path.join(inputPath, file));
+    } else if (fileStat.isFile() && path.extname(inputPath) == reqExt) {
+      jsonFiles.push(inputPath);
+      debugJSON("Using single file: " + inputPath);
     }
-  });
+
+    debugJSON("Merging:");
+    debugJSON(jsonFiles);
+    
+    return jsonFiles;
+  } catch (error) {
+    throw error;
+  }
 }
 
-function createTargetOffersObj(inputPath) {
-  if (!inputPath) {
-    debugJSON("Using default folder: " + path.resolve(DEFAULT_OFFERS_DIR));
-    inputPath = DEFAULT_OFFERS_DIR;
-  }
-  return new Promise((resolve, reject) => {
-    getFiles(inputPath, ".html")
-      .then((files) => {
-        const contentArr = [];
-        // Loop through the HTML files and read their content synchronously
-        debugJSON(files);
-        files.forEach(file => {
-          try {
-            console.log("Read HTML file: " + file);
-            const data = fs.readFileSync(file, "utf-8");
+async function createTargetOffersObj(inputPath) {
+  try {
+    const files = await getFiles(inputPath, ".html");
 
-            contentArr.push({
-              "title": path.basename(file, path.extname(file)),
-              "content": data.replace(/\n/g, "\\n")
-                .replace(/\"/g, "\\\"")
-                .replace(/\\r/g, "\\r")
-            });
-          } catch (readFileErr) {
-            console.error(`Error reading file ${file}:`, readFileErr);
-            reject(readFileErr);
-          }
+    //Make sure at least 1 file was found
+    if (!files || files.length === 0) {
+      throw new Error("No html offer files found at: " + inputPath);
+    }
+
+    // Loop through the HTML files and read their content synchronously
+    const contentArr = [];
+    for (const file of files) {
+      try {
+        console.log("Reading: " + file);
+        const data = fs.readFileSync(file, "utf-8");
+
+        contentArr.push({
+          "title": path.basename(file, path.extname(file)),
+          "content": data.replace(/\n/g, "\\n")
+            .replace(/\"/g, "\\\"")
+            .replace(/\\r/g, "\\r")
         });
-        if (debugJSON.enabled) {
-          writeObjectToFile(contentArr, OUTPUT_OFFER);
-        }
-        resolve(contentArr);
-      })
-      .catch((error) => {
-        console.error("Error: ", error);
-        reject(error);
-      });
-  });
+      } catch (readFileErr) {
+        console.error(`Error reading file ${file}:`, readFileErr);
+        throw readFileErr;
+      }
+    }
+
+    if (debugJSON.enabled) {
+      writeObjectToFile(contentArr, OUTPUT_OFFER);
+    }
+
+    return contentArr;
+  } catch (error) {
+    console.error("An error occurred:", error);
+    throw error;
+  }
 }
 
-function createAIOParams(inputPath) {
-  if (!inputPath) {
-    debugJSON("Using default folder: " + path.resolve(DEFAULT_AIO_DIR));
-    inputPath = DEFAULT_AIO_DIR;
+async function createAIOParams(inputPath) {
+  try {
+    const files = await getFiles(inputPath, ".json");
+
+    //Make sure at least 1 file was found
+    if (!files || files.length === 0) {
+      throw new Error("No aio json files found at: " + inputPath);
+    }
+
+    // Loop through the JSON files and read their content synchronously
+    const contentArr = [];
+    for (const file of files) {
+      debugJSON(file);
+
+      let data = {};
+      try {
+        data = fs.readFileSync(file, "utf8");
+        data = JSON.parse(data);
+      } catch (err) {
+        console.log("requestJSON Error: " + err);
+        throw err;
+      }
+
+      console.log("Finding required request parameters from " + file);
+      let requestParams = {}
+      let value = findNestedObj(data, "CLIENT_ID")
+      if(value) requestParams.client_id = value;
+      else console.error("client_id missing");
+
+      value = findNestedObj(data, "CLIENT_SECRETS")
+      if(value) requestParams.client_secret = value;
+      else console.error("client_secret missing");
+
+      value = findNestedObj(data, "ORG_ID") || findNestedObj(data, "IMS_ORG_ID");
+      if(value) requestParams.org_id = value;
+      else console.error("org_id missing");
+
+      value = findNestedObj(data, "SCOPES");
+      if(value) requestParams.scope = value;
+      else console.error("scope missing");
+
+      value = path.basename(file, path.extname(file));
+      if(value) requestParams.tenant = value;
+      else console.error("tenant missing");
+
+      debugJSON(requestParams);
+      contentArr.push(requestParams);
+    }
+
+    if (debugJSON.enabled) {
+      writeObjectToFile(contentArr, path.join(OUTPUT_AXIOS, "aio-projects.json"));
+    }
+
+    return contentArr;
+  } catch (error) {
+    console.error("An error occurred:", error);
+    throw error;
   }
-  return new Promise((resolve, reject) => {
-    getFiles(inputPath, ".json")
-      .then((files) => {
-        const contentArr = [];
-        console.log("Finding required parameters in:");
-        console.log(files);
-        // Loop through the files and read their content synchronously
-        files.forEach(file => {
-          debugJSON(file);
-
-          let data = {};
-          try {
-            data = fs.readFileSync(file, "utf8");
-            data = JSON.parse(data);
-          } catch (err) {
-            console.log("requestJSON Error: " + err);
-            reject(err);
-          }
-
-          debugJSON("Finding required request parameters from " + path.basename(file));
-          let requestParams = {
-            client_id: findNestedObj(data, "CLIENT_ID"),
-            client_secret: findNestedObj(data, "CLIENT_SECRETS"),
-            org_id: findNestedObj(data, "ORG_ID") || findNestedObj(data, "IMS_ORG_ID"),
-            scope: findNestedObj(data, "SCOPES"),
-            tenant: path.basename(file, path.extname(file))
-          };
-
-          debugJSON("Parameters applied:");
-          debugJSON(requestParams);
-
-          contentArr.push(requestParams);
-        });
-        if (debugJSON.enabled) {
-          writeObjectToFile(contentArr, path.join(OUTPUT_AXIOS, "aio-projects.json"));
-        }
-        console.log("Found all parameters successfully.");
-        resolve(contentArr);
-      }).catch(err => {
-        console.error("getFiles Error:", err);
-        reject(err);
-      });
-  });
 }
 
 //Helper function to find the value of a nested key an a json object
