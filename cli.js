@@ -2,6 +2,7 @@ const packageInfo = require("./package.json");
 const atTool = require("./index.js");
 const minimist = require("minimist");
 const args = minimist(process.argv.slice(2));
+
 //Mac: DEBUG=* aep-tag-tool....
 //WIN: set DEBUG=* & aep-tag-tool....
 const debug = require("debug");
@@ -16,6 +17,12 @@ const modes = {
   delete: "delete"
 };
 
+//Vision
+// at-tool  offers:delete 2023-01 -A params/aio-projects 
+// at-tool  offers:create path/to/offers -A params/aio-projects 
+// at-tool  audiences:create path/to/file.json -A params/aio-projects 
+
+
 exports.run = function () {
   let argsAuthPath = args.auth || args.A;
   let argsCreate = args.create || args.C;
@@ -23,6 +30,7 @@ exports.run = function () {
   const mode = argsCreate ? modes.create : argsDelete ? modes.delete : "";
 
   debugArgs(JSON.stringify(args, null, 2));
+  debugArgs(args._[0])
 
   const argsVersion = args.v || args.version;
   const argsHelp = args.h || args.help;
@@ -43,14 +51,14 @@ exports.run = function () {
   //Validate  that an auth folder/file was given
   if (!argsAuthPath || typeof argsAuthPath == "boolean") {
     console.log("No authentication json given");
-    console.log(HELP_AUTH);
+    console.log(HELP.auth);
     return;
   }
 
   //Validate that exactly 1 mode was given
   if (!mode || (argsCreate && argsDelete)) {
     console.log("You must select a single mode");
-    console.log(HELP);
+    console.log(HELP.default);
     return;
   }
 
@@ -59,7 +67,7 @@ exports.run = function () {
   if (argsCreate) {
     if (typeof argsCreate == "boolean") {
       console.log("Create mode must have a file/folder input parameter");
-      console.log(HELP);
+      console.log(HELP.default);
       return;
     } else {
       data = argsCreate;
@@ -68,7 +76,7 @@ exports.run = function () {
   if (argsDelete) {
     if (typeof argsDelete == "boolean") {
       console.log("Delete Offers mode must have an input filter term");
-      console.log(HELP);
+      console.log(HELP.default);
       return;
     } else {
       data = argsDelete;
@@ -82,7 +90,7 @@ exports.run = function () {
   })
   .catch((error) => {
     console.error(error);
-    console.log(HELP);
+    console.log(HELP.default);
   })
 };
 
