@@ -17,17 +17,17 @@ Run commands on **many** Adobe organizations
 
 Create HTML offers based ona folder of HTML files:
 ```bash
- at-tool -a aio-auth.json --create folder/of/html/files
+ at-tool -a aio-auth.json offers:create folder/of/html/files
 ```
 
 Create a single HTML offer:
 ```bash
- at-tool -a aio-auth.json --create path/to/myOffer.html
+ at-tool -a aio-auth.json offers:create path/to/myOffer.html
 ```
 
 Delete all offers created in January 2024:
 ```bash
- at-tool -a aio-auth.json --delete "2024-01"
+ at-tool -a aio-auth.json offers:delete "2024-01"
 ```
 
 ## Create config file for Authentication
@@ -56,17 +56,20 @@ For OAuth credentials, verify the JSON contains at least:
 ```bash
 at-tool -h
 
-Usage: at-tool [ARGS]
- Arguments:
-    -a, --auth <auth.json>                 AIO project json or oAuth json
-    -D, --delete <String>       [Mode] Deletes all offers modifiedAt containing <String>              
-    -C, --create <path>         [Mode] Creates offer(s) at the given path
-    -v, --version               Displays version of this package
-    -h, --help
-               auth
-               create 
-               delete
-               debug
+Usage: at-tool TYPE:MODE DATA
+
+ TYPE: offers | audiences
+ MODE: create | delete
+
+Required:
+  -A, --auth <auth.json>      AIO project json or oAuth json
+
+Options:
+  -v, --version               Displays version of this package
+  -h, --help
+  -d, --debug                 See debug Options
+
+Optionally use: at-tool -h auth|offers|audiences
 ```
 
 ## Create HTML Offers
@@ -79,5 +82,5 @@ Quickly delete offers based on the modifiedAt key. The Adobe Target API stores t
 The at-tool checks modifiedAt.contains("searchString"). If true, the tool deletes the offer.
 
 ```bash
- at-tool -a aio-auth.json --delete "2024-01"
+ at-tool -a aio-auth.json offers:delete "2024-01"
 ```
