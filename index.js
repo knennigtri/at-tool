@@ -6,22 +6,27 @@ exports.debugOptions = Object.assign({
   "dryrun": "Run without API requests"
 }, dataPreperation.debugOptions, targetRequests.debugOptions);
 
-const mode = {
+const MODES = {
   create: "create",
   delete: "delete"
 };
+const TYPES = {
+  offers: "offers",
+  audiences: "audiences"
+};
 
-const runRequests = async (auth, type, data) => {
+//TODO implement audiences
+const runRequests = async (auth, mode, data) => {
   try {
     const environments = await dataPreperation.createAIOParams(auth);
     const results = await Promise.all(environments.map(async (requestParams) => {
       try {
         const resultToken = await targetRequests.getAccessToken(requestParams);
         if (resultToken && !debugDryrun.enabled) {
-          switch (type) {
-            case mode.create:
+          switch (mode) {
+            case MODES.create:
               return targetRequests.createOffers(requestParams, resultToken, data);
-            case mode.delete:
+            case MODES.delete:
               console.log("Deleting offers with {modifiedAt: " + data + "} for: " + requestParams.tenant);
               return targetRequests.deleteOffers(requestParams, resultToken, data);
           }
@@ -36,19 +41,19 @@ const runRequests = async (auth, type, data) => {
   }
 };
 
-async function run(authPath, action, data) {
+async function run(authPath, mode, data) {
   try {
-    switch (action) {
-      case mode.create:
+    switch (mode) {
+      case MODES.create:
         console.log("Creating Offers object from: " + data);
         return dataPreperation.createTargetOffersObj(data)
           .then((offers) => {
             console.log("Offers prepared for upload.");
-            return runRequests(authPath, mode.create, offers)
+            return runRequests(authPath, MODES.create, offers)
               .then((success) => "Results: " + success);
           });
-      case mode.delete:
-        return runRequests(authPath, mode.delete, data)
+      case MODES.delete:
+        return runRequests(authPath, MODES.delete, data)
           .then((success) => "Results: " + success);
       default:
         return Promise.reject("Invalid action type");
@@ -59,3 +64,5 @@ async function run(authPath, action, data) {
 }
 
 exports.run = run;
+exports.TYPES = TYPES;
+exports.MODES = MODES;
