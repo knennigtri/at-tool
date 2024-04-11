@@ -24,11 +24,11 @@ const runRequests = async (auth, mode, data) => {
         const resultToken = await targetRequests.getAccessToken(requestParams);
         if (resultToken && !debugDryrun.enabled) {
           switch (mode) {
-            case MODES.create:
-              return targetRequests.createOffers(requestParams, resultToken, data);
-            case MODES.delete:
-              console.log("Deleting offers with {modifiedAt: " + data + "} for: " + requestParams.tenant);
-              return targetRequests.deleteOffers(requestParams, resultToken, data);
+          case MODES.create:
+            return targetRequests.createOffers(requestParams, resultToken, data);
+          case MODES.delete:
+            console.log("Deleting offers with {modifiedAt: " + data + "} for: " + requestParams.tenant);
+            return targetRequests.deleteOffers(requestParams, resultToken, data);
           }
         }
       } catch (error) {
@@ -44,19 +44,19 @@ const runRequests = async (auth, mode, data) => {
 async function run(authPath, mode, data) {
   try {
     switch (mode) {
-      case MODES.create:
-        console.log("Creating Offers object from: " + data);
-        return dataPreperation.createTargetOffersObj(data)
-          .then((offers) => {
-            console.log("Offers prepared for upload.");
-            return runRequests(authPath, MODES.create, offers)
-              .then((success) => "Results: " + success);
-          });
-      case MODES.delete:
-        return runRequests(authPath, MODES.delete, data)
-          .then((success) => "Results: " + success);
-      default:
-        return Promise.reject("Invalid action type");
+    case MODES.create:
+      console.log("Creating Offers object from: " + data);
+      return dataPreperation.createTargetOffersObj(data)
+        .then((offers) => {
+          console.log("Offers prepared for upload.");
+          return runRequests(authPath, MODES.create, offers)
+            .then((success) => "Results: " + success);
+        });
+    case MODES.delete:
+      return runRequests(authPath, MODES.delete, data)
+        .then((success) => "Results: " + success);
+    default:
+      return Promise.reject("Invalid action type");
     }
   } catch (error) {
     return Promise.reject(error);

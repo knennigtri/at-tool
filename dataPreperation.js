@@ -11,31 +11,27 @@ exports.debugOptions = {
 };
 
 async function getFiles(inputPath, reqExt) {
-  try {
-    let jsonFiles = [];
+  let jsonFiles = [];
 
-    const fileStat = await stat(inputPath);
+  const fileStat = await stat(inputPath);
 
-    if (fileStat.isDirectory()) {
-      // Read the list of files in the folder asynchronously
-      const files = await readdir(inputPath);
+  if (fileStat.isDirectory()) {
+    // Read the list of files in the folder asynchronously
+    const files = await readdir(inputPath);
 
-      // Filter for JSON files
-      jsonFiles = files
-        .filter(file => path.extname(file).toLowerCase() === reqExt)
-        .map(file => path.join(inputPath, file));
-    } else if (fileStat.isFile() && path.extname(inputPath) == reqExt) {
-      jsonFiles.push(inputPath);
-      debugJSON("Using single file: " + inputPath);
-    }
-
-    debugJSON("Merging:");
-    debugJSON(jsonFiles);
-    
-    return jsonFiles;
-  } catch (error) {
-    throw error;
+    // Filter for JSON files
+    jsonFiles = files
+      .filter(file => path.extname(file).toLowerCase() === reqExt)
+      .map(file => path.join(inputPath, file));
+  } else if (fileStat.isFile() && path.extname(inputPath) == reqExt) {
+    jsonFiles.push(inputPath);
+    debugJSON("Using single file: " + inputPath);
   }
+
+  debugJSON("Merging:");
+  debugJSON(jsonFiles);
+    
+  return jsonFiles;
 }
 
 async function createTargetOffersObj(inputPath) {
@@ -101,12 +97,12 @@ async function createAIOParams(inputPath) {
       }
 
       console.log("Finding required request parameters from " + file);
-      let requestParams = {}
-      let value = findNestedObj(data, "CLIENT_ID")
+      let requestParams = {};
+      let value = findNestedObj(data, "CLIENT_ID");
       if(value) requestParams.client_id = value;
       else console.error("client_id missing");
 
-      value = findNestedObj(data, "CLIENT_SECRETS")
+      value = findNestedObj(data, "CLIENT_SECRETS");
       if(value) requestParams.client_secret = value;
       else console.error("client_secret missing");
 

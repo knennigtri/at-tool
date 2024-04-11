@@ -23,12 +23,8 @@ const debbugOptions = {
 
 exports.run = function () {
   let argsAuthPath = args.auth || args.A;
-  let argsCreate = args.create || args.C;
-  let argsDelete = args.delete || args.D;
-  const origMode = argsCreate ? modes.create : argsDelete ? modes.delete : "";
-
   debugArgs(JSON.stringify(args, null, 2));
-  debugArgs(args._[0])
+  debugArgs(args._[0]);
 
   const argsVersion = args.v || args.version;
   const argsHelp = args.h || args.help;
@@ -69,7 +65,7 @@ exports.run = function () {
     return;
   }
   const cmd = args._[0].split(":");
-  if (cmd.length > 2) console.log("Ignoring any commands beyond TYPE:MODE in " + args._[0])
+  if (cmd.length > 2) console.log("Ignoring any commands beyond TYPE:MODE in " + args._[0]);
   const type = cmd[0];
   const mode = cmd[1];
 
@@ -92,10 +88,13 @@ exports.run = function () {
     return;
   }
   //Check that DATA was given
-  if (args._.length != 2) {
+  let data = "";
+  if (args._.length < 2) {
     console.log("The command: " + args._[0] + " must have DATA.");
     console.log(useage);
     return;
+  } else {
+    data = args._[1];
   }
 
   if (type.toLowerCase() == atTool.TYPES.audiences) {
@@ -109,19 +108,17 @@ exports.run = function () {
       .catch((error) => {
         console.error(error);
         console.log(HELP.default);
-      })
+      });
   }
 };
 
 const cliName = packageInfo.name.replace("@knennigtri/", "");
 const param_auth = "-A, --auth <auth.json>      AIO project json or oAuth json";
 const useage =
-  `Usage: 
+  `Usage: ${cliName} TYPE:MODE DATA
 
- $ ${cliName} TYPE:MODE DATA
-
-  TYPE: offers | audiences
-  MODE: create | delete
+ TYPE: offers | audiences
+ MODE: create | delete
 `;
 const HELP = {
   default:
@@ -150,13 +147,11 @@ Optionally use: ${cliName} -h auth|offers|audiences
     ]
   }`,
   offers:
-    `USAGE:
-  $ ${cliName} offers:create PATH     Uploads all offers found at PATH
+    `USAGE: ${cliName} offers:create PATH     Uploads all offers found at PATH
 
    PATH can be a folder or single html file
 
-USAGE:
-  $ ${cliName} offers:delete STRING     Deletes all offers modifiedAt containing STRING  
+USAGE: ${cliName} offers:delete STRING     Deletes all offers modifiedAt containing STRING  
 
    STRING to be searched in the modifiedAt property. Ex: 2024-01-12T18:51:01Z
 
@@ -181,4 +176,4 @@ ARGUMENTS:
   STRING:  string to be searched in the modifiedAt property of the audiences to delete. Ex: 2024-01-12T18:51:01Z
 
 REQUIRED:
-  ${param_auth}`
+  ${param_auth}`;
