@@ -7,14 +7,12 @@ const args = minimist(process.argv.slice(2));
 //WIN: set DEBUG=* & aep-tag-tool....
 const debug = require("debug");
 const debugArgs = debug("args");
-const debbugOptions = Object.assign({
-  "*": "Output all debugging messages",
-  "args": "See CLI argument messages"
-}, atTool.debugOptions); 
-
-const modes = {
-  create: "create",
-  delete: "delete"
+const debbugOptions = {
+  ...{
+    "*": "Output all debugging messages",
+    "args": "See CLI argument messages"
+  },
+  ...atTool.debugOptions
 };
 
 //Vision
@@ -27,24 +25,33 @@ exports.run = function () {
   let argsAuthPath = args.auth || args.A;
   let argsCreate = args.create || args.C;
   let argsDelete = args.delete || args.D;
-  const mode = argsCreate ? modes.create : argsDelete ? modes.delete : "";
+  const origMode = argsCreate ? modes.create : argsDelete ? modes.delete : "";
 
   debugArgs(JSON.stringify(args, null, 2));
   debugArgs(args._[0])
 
   const argsVersion = args.v || args.version;
   const argsHelp = args.h || args.help;
+  const argsDebug = args.d || args.debug;
 
   // Show CLI help
   if (argsHelp) {
-    const helpType = argsHelp === true ? "default" : argsHelp.toLowerCase();
-    console.log(HELP[helpType]);
+    let helpType = argsHelp === true ? "default" : argsHelp.toLowerCase();
+    if (HELP[helpType]) console.log(HELP[helpType]);
+    else console.log(HELP.default);
     return;
   }
 
   // Show version
   if (argsVersion) {
     console.log(packageInfo.version);
+    return;
+  }
+
+  if (argsDebug) {
+    console.log("[Mac] $ DEBUG:<option> " + cliName + " -m <file>");
+    console.log("[Win] $ set DEBUG=<option> & " + cliName + " -m <file>");
+    console.log("Options: " + JSON.stringify(debbugOptions, null, 2));
     return;
   }
 
@@ -55,59 +62,81 @@ exports.run = function () {
     return;
   }
 
-  //Validate that exactly 1 mode was given
-  if (!mode || (argsCreate && argsDelete)) {
-    console.log("You must select a single mode");
-    console.log(HELP.default);
+  //Validate there was input for TYPE and MODE
+  if (args._.length === 0) {
+    console.log("You must specify a TYPE:MODE");
+    console.log(useage);
+    return;
+  }
+  const cmd = args._[0].split(":");
+  if (cmd.length > 2) console.log("Ignoring any commands beyond TYPE:MODE in " + args._[0])
+  const type = cmd[0];
+  const mode = cmd[1];
+
+  //Check if both TYPE and MODE exist
+  if (!mode || !type) {
+    console.log("The command: " + args._[0] + " is note a valid TYPE:MODE");
+    console.log(useage);
+    return;
+  }
+  //Check that TYPE is valid
+  if ((type.toLowerCase() != atTool.TYPES.offers) && (type.toLowerCase() != atTool.TYPES.audiences)) {
+    console.log("The command: " + args._[0] + " does not have a valid TYPE");
+    console.log(useage);
+    return;
+  }
+  //Check that MODE is valid
+  if ((mode.toLowerCase() != atTool.MODES.create) && (mode.toLowerCase() != atTool.MODES.delete)) {
+    console.log("The command: " + args._[0] + " does not have a valid MODE");
+    console.log(useage);
+    return;
+  }
+  //Check that DATA was given
+  if (args._.length != 2) {
+    console.log("The command: " + args._[0] + " must have DATA.");
+    console.log(useage);
     return;
   }
 
-  //Validate that data was given with the mode
-  let data = "";
-  if (argsCreate) {
-    if (typeof argsCreate == "boolean") {
-      console.log("Create mode must have a file/folder input parameter");
-      console.log(HELP.default);
-      return;
-    } else {
-      data = argsCreate;
-    }
+  if (type.toLowerCase() == atTool.TYPES.audiences) {
+    console.log(HELP.audiences);
+    return;
+  } else if (type.toLowerCase() == atTool.TYPES.offers) {
+    atTool.run(argsAuthPath, mode, data)
+      .then((success) => {
+        console.log(success);
+      })
+      .catch((error) => {
+        console.error(error);
+        console.log(HELP.default);
+      })
   }
-  if (argsDelete) {
-    if (typeof argsDelete == "boolean") {
-      console.log("Delete Offers mode must have an input filter term");
-      console.log(HELP.default);
-      return;
-    } else {
-      data = argsDelete;
-    }
-  }
-
-  console.log("Running in " + mode.toUpperCase() + " mode");
-  atTool.run(argsAuthPath, mode, data)
-  .then((success) => {
-    console.log(success);
-  })
-  .catch((error) => {
-    console.error(error);
-    console.log(HELP.default);
-  })
 };
 
 const cliName = packageInfo.name.replace("@knennigtri/", "");
+const param_auth = "-A, --auth <auth.json>      AIO project json or oAuth json";
+const useage =
+  `Usage: 
+
+ $ ${cliName} TYPE:MODE DATA
+
+  TYPE: offers | audiences
+  MODE: create | delete
+`;
 const HELP = {
   default:
-    `Usage: ${cliName} [ARGS]
- Arguments:
-    -A, --auth <auth.json>      AIO project json or oAuth json
-    -D, --delete <String>       [Mode] Deletes all offers modifiedAt containing <String>              
-    -C, --create <path>         [Mode] Creates offer(s) at the given path
-    -v, --version               Displays version of this package
-    -h, --help
+    `${useage}
+Required:
+  ${param_auth}
 
-    Optionally use: ${cliName} -h auth|create|delete|debug
+Options:
+  -v, --version               Displays version of this package
+  -h, --help
+  -d, --debug                 See debug Options
+
+Optionally use: ${cliName} -h auth|offers|audiences
     `,
-  auth: 
+  auth:
     `In your Adobe IO Project under Credentials click the "Download JSON" button
     For OAuth credentials, make sure the JSON contains at least:
     {
@@ -120,21 +149,36 @@ const HELP = {
       "xxxxxxxxx"
     ]
   }`,
-  create: "My Create message",
-  delete: "My Delete Message",
-  debug: 
-  `Debug options:
-  Mac:
-    $ DEBUG=<value> ${cliName}....
-  Win:
-    $ set DEBUG=<value> & ${cliName}...
+  offers:
+    `USAGE:
+  $ ${cliName} offers:create PATH     Uploads all offers found at PATH
 
-  Where <value> can be:
-`
-  + JSON.stringify(debbugOptions, null, 2)
-    .replaceAll("\": ","     ")
-    .replaceAll("\"","")
-    .replaceAll(",","")
-    .replaceAll("{\n","")
-    .replaceAll("}","")
+   PATH can be a folder or single html file
+
+USAGE:
+  $ ${cliName} offers:delete STRING     Deletes all offers modifiedAt containing STRING  
+
+   STRING to be searched in the modifiedAt property. Ex: 2024-01-12T18:51:01Z
+
+REQUIRED:
+  ${param_auth}
+  `,
+  audiences: "audiences TYPE is not implemented yet.",
 };
+
+
+const aud =
+  `USAGE:
+  $ ${cliName} audiences:create PATH
+
+ARGUMENTS:
+  PATH: the path to athe json with the audiences to create
+
+USAGE:
+  $ ${cliName} audiences:delete STRING     Deletes all audiences modifiedAt containing <String>  
+
+ARGUMENTS:
+  STRING:  string to be searched in the modifiedAt property of the audiences to delete. Ex: 2024-01-12T18:51:01Z
+
+REQUIRED:
+  ${param_auth}`
