@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Contents
+
+- [Adobe Target automations](#adobe-target-automations)
+  - [Command Line Tool](#command-line-tool)
+  - [Create config file for Authentication](#create-config-file-for-authentication)
+  - [Usage](#usage)
+  - [Offer Deletion](#offer-deletion)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Adobe Target automations
 Actions currently supported:
  * Create Target offers based on HTML files
