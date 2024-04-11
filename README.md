@@ -72,15 +72,8 @@ Options:
 Optionally use: at-tool -h auth|offers|audiences
 ```
 
-## Create HTML Offers
-//TODO
-
-## Delete HTML Offers
-Quickly delete offers based on the modifiedAt key. The Adobe Target API stores the last modified string as:
+## Offer Deletion
+Offers are deleted based on the modifiedAt property. The Adobe Target API stores the last modified string as:
 `"modifiedAt": "2023-12-20T18:11:22Z"`
 
-The at-tool checks modifiedAt.contains("searchString"). If true, the tool deletes the offer.
-
-```bash
- at-tool -a aio-auth.json offers:delete "2024-01"
-```
+The at-tool checks modifiedAt.contains("searchString"). If true, the offer is deleted.
