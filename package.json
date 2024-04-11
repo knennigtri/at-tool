@@ -1,0 +1,48 @@
+{
+  "name": "at-tool",
+  "version": "1.0.0",
+  "description": "CLI for the Adobe Target API",
+  "main": "cli.js",
+  "preferGlobal": true,
+  "bin": {
+    "at-tool": "bin/global.js"
+  },
+  "scripts": {
+    "preversion": "git fetch --tags && npm run lint",
+    "version": "npm run build",
+    "postversion": "git push --follow-tags",
+    "build": "npm run readmeTOC && npm ci && npm i --package-lock-only && depcheck ./",
+    "readmeTOC": "doctoc README.md --github --title='# Contents'",
+    "lint": "eslint '**/*.js?(x)'",
+    "lint:fix": "npm run lint -- --fix",
+    "local": "npm pack",
+    "release:bugfix": "npm version patch && publish:bugfix",
+    "publish:bugfix": "npm publish --tag bugfix"
+  },
+  "dependencies": {
+    "axios": "^1.6.5",
+    "debug": "^4.3.4",
+    "mkdirp": "^3.0.1",
+    "newman": "^6.0.0"
+  },
+  "devDependencies": {
+    "depcheck": "^1.4.3",
+    "doctoc": "^2.2.0",
+    "eslint": "^8.25.0"
+  },
+  "author": "Kevin Nennig <nen.devpr@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:knennigtri/target-tool.git"
+  },
+  "bugs": {
+    "url": "https://github.com/knennigtri/target-tool/issues/new/choose"
+  },
+  "keywords": [
+    "adobe target",
+    "target",
+    "adobe",
+    "target api"
+  ],
+  "license": "ISC"
+}
