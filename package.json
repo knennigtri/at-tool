@@ -1,5 +1,5 @@
 {
-  "name": "at-tool",
+  "name": "@knennigtri/at-tool",
   "version": "1.0.0",
   "description": "CLI for the Adobe Target API",
   "main": "cli.js",
