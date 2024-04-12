@@ -2,7 +2,6 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 # Contents
 
-- [Contents](#contents)
 - [Adobe Target automations](#adobe-target-automations)
   - [Command Line Tool](#command-line-tool)
   - [Create config file for Authentication](#create-config-file-for-authentication)
