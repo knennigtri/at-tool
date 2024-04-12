@@ -2,6 +2,7 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 # Contents
 
+- [Contents](#contents)
 - [Adobe Target automations](#adobe-target-automations)
   - [Command Line Tool](#command-line-tool)
   - [Create config file for Authentication](#create-config-file-for-authentication)
@@ -27,7 +28,7 @@ Run commands on **many** Adobe organizations
  at-tool -a path/to/auth/jsons [ARGS]
 ```
 
-Create HTML offers based ona folder of HTML files:
+Create HTML offers based on a folder of HTML files:
 ```bash
  at-tool -a aio-auth.json offers:create folder/of/html/files
 ```
