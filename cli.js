@@ -15,14 +15,8 @@ const debbugOptions = {
   ...atTool.debugOptions
 };
 
-//Vision
-// at-tool  offers:delete 2023-01 -A params/aio-projects 
-// at-tool  offers:create path/to/offers -A params/aio-projects 
-// at-tool  audiences:create path/to/file.json -A params/aio-projects 
-
-
 exports.run = function () {
-  let argsAuthPath = args.auth || args.A;
+  let argsAuthPath = args.auth || args.A || args.a;
   debugArgs(JSON.stringify(args, null, 2));
   debugArgs(args._[0]);
 
@@ -113,7 +107,7 @@ exports.run = function () {
 };
 
 const cliName = packageInfo.name.replace("@knennigtri/", "");
-const param_auth = "-A, --auth <auth.json>      AIO project json or oAuth json";
+const param_auth = "-A, -a, --auth <auth.json>      AIO project json or oAuth json";
 const useage =
   `Usage: ${cliName} TYPE:MODE DATA
 
