@@ -27,7 +27,7 @@ Run commands on **many** Adobe organizations
  at-tool -a path/to/auth/jsons [ARGS]
 ```
 
-Create HTML offers based ona folder of HTML files:
+Create HTML offers based on a folder of HTML files:
 ```bash
  at-tool -a aio-auth.json offers:create folder/of/html/files
 ```

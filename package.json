@@ -1,6 +1,6 @@
 {
-  "name": "at-tool",
-  "version": "1.0.0",
+  "name": "@knennigtri/at-tool",
+  "version": "1.0.2",
   "description": "CLI for the Adobe Target API",
   "main": "cli.js",
   "preferGlobal": true,
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "preversion": "git fetch --tags && npm run lint",
-    "version": "npm run build",
+    "version": "npm audit fix && npm run build",
     "postversion": "git push --follow-tags",
     "build": "npm run readmeTOC && npm ci && npm i --package-lock-only && depcheck ./",
     "readmeTOC": "doctoc README.md --github --title='# Contents'",
@@ -22,8 +22,8 @@
   "dependencies": {
     "axios": "^1.6.5",
     "debug": "^4.3.4",
-    "mkdirp": "^3.0.1",
-    "newman": "^6.0.0"
+    "minimist": "^1.2.8",
+    "mkdirp": "^3.0.1"
   },
   "devDependencies": {
     "depcheck": "^1.4.3",
