@@ -33,10 +33,10 @@
   "author": "Kevin Nennig <nen.devpr@gmail.com>",
   "repository": {
     "type": "git",
-    "url": "git@github.com:knennigtri/target-tool.git"
+    "url": "git@github.com:knennigtri/at-tool.git"
   },
   "bugs": {
-    "url": "https://github.com/knennigtri/target-tool/issues/new/choose"
+    "url": "https://github.com/knennigtri/at-tool/issues/new/choose"
   },
   "keywords": [
     "adobe target",
