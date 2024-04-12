@@ -9,7 +9,7 @@
   },
   "scripts": {
     "preversion": "git fetch --tags && npm run lint",
-    "version": "npm run build",
+    "version": "npm audit fix && npm run build",
     "postversion": "git push --follow-tags",
     "build": "npm run readmeTOC && npm ci && npm i --package-lock-only && depcheck ./",
     "readmeTOC": "doctoc README.md --github --title='# Contents'",
