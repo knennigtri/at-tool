@@ -1,6 +1,6 @@
 {
   "name": "@knennigtri/at-tool",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "CLI for the Adobe Target API",
   "main": "cli.js",
   "preferGlobal": true,
