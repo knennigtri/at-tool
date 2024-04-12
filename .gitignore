@@ -36,7 +36,7 @@ updatedImport.json
 .vscode/settings.json
 newman/
 environments/
-aio-projects/**/*.json
+*/aio-projects/**/*.json
 node_modules/
 offers.json
 

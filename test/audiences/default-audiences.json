@@ -1,0 +1,97 @@
+{
+    "audiences": [
+        {
+            "id": 6240677,
+            "name": "Mac OS Operating System",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return (((user.browser!=null) && (user.browser.indexOf(\"Macintosh\")>-1)));"
+            },
+            "modifiedAt": "2022-02-03T22:34:51Z"
+        },
+        {
+            "id": 6313320,
+            "name": "Windows Operating System",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return (((user.browser!=null) && (user.browser.indexOf(\"Windows\")>-1)));"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6313321,
+            "name": "Linux Operating System",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return (((user.browser!=null) && (user.browser.indexOf(\"Linux\")>-1)));"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6155609,
+            "name": "Safari Browser",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return ((user.browserType==\"safari\"));"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6155608,
+            "name": "Chrome Browser",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return ((user.browserType==\"chrome\"));"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6155610,
+            "name": "Firefox Browser",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return ((user.browserType==\"firefox\"));"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6313319,
+            "name": "Internet Explorer",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return ((user.browserType==\"ie\"));"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6313322,
+            "name": "Returning Visitors",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "script": "return (!user.isFirstSession);"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        },
+        {
+            "id": 6313325,
+            "name": "Tablet Device",
+            "description": "--",
+            "origin": "target",
+            "targetRule": {
+                "equals": [
+                    "1"
+                ],
+                "mobile": "isTablet"
+            },
+            "modifiedAt": "2024-01-12T18:51:01Z"
+        }
+    ]
+}
